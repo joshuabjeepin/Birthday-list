@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Josh's Birthday List 🎂</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f; --surface: #1a1a1a; --border: #2e2e2e;
+    --accent: #e8612a; --accent2: #f5a623;
+    --text: #f0ece4; --muted: #888; --green: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; padding: 0 0 60px; }
+
+  header { background: var(--surface); border-bottom: 2px solid var(--accent); padding: 32px 24px 24px; text-align: center; position: relative; overflow: hidden; }
+  header::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 120%, rgba(232,97,42,0.15) 0%, transparent 70%); pointer-events: none; }
+  .header-tag { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); background: rgba(232,97,42,0.12); border: 1px solid rgba(232,97,42,0.3); padding: 4px 14px; border-radius: 2px; margin-bottom: 14px; }
+  h1 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(48px, 10vw, 80px); letter-spacing: 3px; line-height: 1; }
+  h1 span { color: var(--accent); }
+  .subtitle { margin-top: 10px; font-size: 14px; color: var(--muted); }
+  .legend { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 20px auto 0; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .legend-dot.available { background: var(--accent); }
+  .legend-dot.claimed { background: #444; }
+
+  .sync-bar { text-align: center; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding: 9px; font-weight: 600; transition: all 0.3s; }
+  .sync-bar.ok { color: var(--green); }
+  .sync-bar.loading { color: var(--muted); }
+  .sync-bar.error { color: #ef4444; }
+
+  .tabs { display: flex; gap: 8px; padding: 16px 24px 0; overflow-x: auto; scrollbar-width: none; max-width: 960px; margin: 0 auto; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 8px 16px; border-radius: 2px; cursor: pointer; transition: all 0.15s; }
+  .tab:hover { color: var(--text); border-color: #555; }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .stats { text-align: center; font-size: 13px; color: var(--muted); padding: 16px 24px 4px; max-width: 960px; margin: 0 auto; }
+  .stats strong { color: var(--text); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; padding: 16px 24px; max-width: 960px; margin: 0 auto; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 20px; position: relative; transition: border-color 0.2s, transform 0.15s, opacity 0.3s; animation: fadeUp 0.35s ease both; }
+  .card:hover { border-color: #444; transform: translateY(-1px); }
+  .card.claimed { opacity: 0.45; }
+  .card.claimed:hover { transform: none; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .card-cat { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  .card.claimed .card-cat { color: var(--muted); }
+  .card-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; line-height: 1.3; }
+  .card.claimed .card-name { color: #555; text-decoration: line-through; text-decoration-color: #444; }
+  .card-price { font-size: 13px; color: var(--accent2); font-weight: 500; margin-bottom: 14px; }
+  .card.claimed .card-price { color: #555; }
+  .card-footer { display: flex; align-items: center; gap: 8px; }
+
+  .btn-buy { flex: 1; background: rgba(232,97,42,0.12); border: 1px solid rgba(232,97,42,0.3); color: var(--accent); font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 9px 14px; border-radius: 2px; cursor: pointer; text-decoration: none; text-align: center; transition: all 0.15s; display: block; }
+  .btn-buy:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .card.claimed .btn-buy { background: transparent; border-color: #333; color: #555; pointer-events: none; }
+
+  .btn-claim { background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; padding: 9px 12px; border-radius: 2px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .btn-claim:hover { border-color: var(--green); color: var(--green); }
+  .card.claimed .btn-claim { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.3); color: var(--green); }
+
+  .claimed-badge { position: absolute; top: 14px; right: 14px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.25); color: var(--green); font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; display: none; }
+  .card.claimed .claimed-badge { display: block; }
+
+  .note { text-align: center; font-size: 12px; color: #444; padding: 0 24px; max-width: 700px; margin: 16px auto 0; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-tag">🎂 Birthday Wishlist 2026</div>
+  <h1>Josh's <span>List</span></h1>
+  <p class="subtitle">Click "I've Got This" to claim an item — everyone sees it in real time.</p>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot available"></div> Available</div>
+    <div class="legend-item"><div class="legend-dot claimed"></div> Already Claimed</div>
+  </div>
+</header>
+
+<div class="sync-bar loading" id="syncBar">⟳ Connecting...</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab active" data-cat="all">All Items</button>
+  <button class="tab" data-cat="Core Tools">🔧 Core Tools</button>
+  <button class="tab" data-cat="Fabrication Tools">🛠️ Fabrication</button>
+  <button class="tab" data-cat="Grinding & Finishing">🔥 Grinding</button>
+  <button class="tab" data-cat="Clamps & Workholding">🧰 Clamps</button>
+  <button class="tab" data-cat="Shop / Organization">🏗️ Shop & Org</button>
+  <button class="tab" data-cat="Vehicle / Mobile">🚗 Vehicle</button>
+  <button class="tab" data-cat="Lighting">💡 Lighting</button>
+  <button class="tab" data-cat="Safety Gear">🧥 Safety</button>
+</div>
+
+<div class="stats" id="stats"></div>
+<div class="grid" id="grid"></div>
+<p class="note">⚠️ Links go to suggested products — feel free to find a better deal elsewhere. Claims sync in real time for everyone viewing this page.</p>
+
+<script>
+const ITEMS = [
+  { id: 1,  name: "Portable Welding Table",                cat: "Core Tools",           price: "~$90",     url: "https://www.harborfreight.com/adjustable-steel-welding-table-61369.html" },
+  { id: 2,  name: "Drill Press",                           cat: "Core Tools",           price: "$90–$300", url: "https://www.harborfreight.com/power-tools/drills-drivers/drill-presses.html" },
+  { id: 3,  name: "Pipe / Tubing Notcher",                 cat: "Fabrication Tools",    price: "~$60",     url: "https://www.harborfreight.com/pipetubing-notcher-71048.html" },
+  { id: 4,  name: "Step Drill Bit Set",                    cat: "Fabrication Tools",    price: "$15–$25",  url: "https://www.harborfreight.com/3-piece-titanium-nitride-coated-high-speed-steel-step-drills-91616.html" },
+  { id: 5,  name: "40 Grit Zirconia Flap Discs (10-Pack)", cat: "Grinding & Finishing", price: "$15–$25",  url: "https://a.co/d/01XzzHg2" },
+  { id: 6,  name: "Flap Disc Variety Pack",                cat: "Grinding & Finishing", price: "$20–$40",  url: "https://www.amazon.com/dp/B07P9Z5X2P" },
+  { id: 7,  name: 'F-Style Welding Clamp (12")',           cat: "Clamps & Workholding", price: "$10–$20",  url: "https://www.harborfreight.com/12-in-f-style-welding-clamp-63512.html" },
+  { id: 8,  name: "Butt Welding Clamps (8-Piece)",         cat: "Clamps & Workholding", price: "$15–$30",  url: "https://www.harborfreight.com/butt-welding-clamps-8-piece-60545.html" },
+  { id: 9,  name: 'Locking Welding Clamp (9")',            cat: "Clamps & Workholding", price: "$10–$20",  url: "https://www.harborfreight.com/9-in-locking-welding-clamp-56629.html" },
+  { id: 11, name: "Multipurpose Magnet Holders",           cat: "Clamps & Workholding", price: "$10–$20",  url: "https://www.harborfreight.com/4-3-4-quarter-inch-multipurpose-magnet-holder-1938.html" },
+  { id: 20, name: "Magnetic MIG Torch / Gun Holder",       cat: "Clamps & Workholding", price: "~$15",     url: "https://www.harborfreight.com/magnetic-mig-torch-rest-3642.html" },
+  { id: 12, name: "Under-Desk Slide-Out Drawer",           cat: "Shop / Organization",  price: "$25–$50",  url: "https://a.co/d/04bV2Ro2" },
+  { id: 13, name: "U-Channel / Strut Track",               cat: "Shop / Organization",  price: "$25–$50",  url: "https://a.co/d/04YyEGPB" },
+  { id: 18, name: '22" Magnetic Floor Sweeper',            cat: "Shop / Organization",  price: "~$42",     url: "https://www.harborfreight.com/22-inch-magnetic-floor-sweeper-with-release-98399.html" },
+  { id: 14, name: "Metal MOLLE Seat Back Panel",           cat: "Vehicle / Mobile",     price: "$30–$70",  url: "https://a.co/d/0iT0pNkd" },
+  { id: 15, name: "LED Rechargeable Magnetic Shop Lights", cat: "Lighting",             price: "$20–$50",  url: "https://a.co/d/01hqkIJt" },
+  { id: 16, name: "FR Cotton Welding Shirt (XL)",          cat: "Safety Gear",          price: "$30–$70",  url: "https://www.amazon.com/s?k=flame+resistant+welding+shirt+xl" },
+  { id: 17, name: "Wearable Air Purifier Mask (HEPA)",     cat: "Safety Gear",          price: "$20–$80",  url: "https://a.co/d/0drFBL9T" },
+];
+
+const BLOB_BASE   = 'https://jsonblob.com/api/jsonBlob';
+const BLOB_ID_KEY = 'josh_bday_blob_2026';
+const LOCAL_KEY   = 'josh_bday_claimed_fallback';
+
+let claimed     = {};
+let blobId      = localStorage.getItem(BLOB_ID_KEY) || null;
+let currentCat  = 'all';
+
+const syncBar = document.getElementById('syncBar');
+function setSyncStatus(state, msg) { syncBar.className = 'sync-bar ' + state; syncBar.textContent = msg; }
+
+async function loadClaimed() {
+  if (!blobId) {
+    claimed = {};
+    setSyncStatus('ok', '✓ Ready');
+    render(currentCat);
+    return;
+  }
+  try {
+    setSyncStatus('loading', '⟳ Syncing...');
+    const res = await fetch(`${BLOB_BASE}/${blobId}`, { headers: { Accept: 'application/json' } });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    claimed = data.claimed || {};
+    setSyncStatus('ok', '✓ Live — claims sync across all devices');
+    render(currentCat);
+  } catch {
+    claimed = JSON.parse(localStorage.getItem(LOCAL_KEY) || '{}');
+    setSyncStatus('error', '⚠ Offline — changes saved locally only');
+    render(currentCat);
+  }
+}
+
+async function saveClaimed() {
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(claimed));
+  if (!blobId) {
+    try {
+      const res = await fetch(BLOB_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ claimed })
+      });
+      if (!res.ok) throw new Error();
+      const loc = res.headers.get('Location') || '';
+      const id  = loc.split('/').pop();
+      if (id) { blobId = id; localStorage.setItem(BLOB_ID_KEY, blobId); }
+      setSyncStatus('ok', '✓ Synced');
+    } catch { setSyncStatus('error', '⚠ Could not sync — saved locally'); }
+    return;
+  }
+  try {
+    await fetch(`${BLOB_BASE}/${blobId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ claimed })
+    });
+    setSyncStatus('ok', '✓ Synced');
+  } catch { setSyncStatus('error', '⚠ Sync failed — saved locally'); }
+}
+
+async function toggleClaim(id) {
+  if (claimed[id]) { delete claimed[id]; } else { claimed[id] = true; }
+  render(currentCat);
+  setSyncStatus('loading', '⟳ Saving...');
+  await saveClaimed();
+}
+
+function render(cat) {
+  currentCat = cat;
+  const grid = document.getElementById('grid');
+  const stats = document.getElementById('stats');
+  const filtered = cat === 'all' ? ITEMS : ITEMS.filter(i => i.cat === cat);
+  const claimedCount = ITEMS.filter(i => claimed[i.id]).length;
+  stats.innerHTML = `<strong>${ITEMS.length - claimedCount}</strong> of <strong>${ITEMS.length}</strong> items still available`;
+  grid.innerHTML = filtered.map((item, idx) => {
+    const isClaimed = !!claimed[item.id];
+    return `
+      <div class="card ${isClaimed ? 'claimed' : ''}" style="animation-delay:${idx * 0.04}s">
+        <div class="claimed-badge">✓ Claimed</div>
+        <div class="card-cat">${item.cat}</div>
+        <div class="card-name">${item.name}</div>
+        <div class="card-price">${item.price}</div>
+        <div class="card-footer">
+          <a class="btn-buy" href="${item.url}" target="_blank" rel="noopener">${isClaimed ? 'Claimed' : 'View / Buy →'}</a>
+          <button class="btn-claim" onclick="toggleClaim(${item.id})">${isClaimed ? '↩ Unclaim' : "I've Got This"}</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// Poll every 20s so late-arriving family members see updates
+setInterval(async () => {
+  if (!blobId) return;
+  try {
+    const res = await fetch(`${BLOB_BASE}/${blobId}`, { headers: { Accept: 'application/json' } });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (JSON.stringify(data.claimed || {}) !== JSON.stringify(claimed)) {
+      claimed = data.claimed || {};
+      render(currentCat);
+      setSyncStatus('ok', '✓ Updated');
+    }
+  } catch {}
+}, 20000);
+
+document.getElementById('tabs').addEventListener('click', e => {
+  if (!e.target.classList.contains('tab')) return;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  e.target.classList.add('active');
+  render(e.target.dataset.cat);
+});
+
+loadClaimed();
+</script>
+</body>
+</html>
